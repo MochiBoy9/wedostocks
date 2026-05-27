@@ -84,6 +84,8 @@
     </footer>
 
     <script>
+        // NOTE: If you keep getting API error flags, check your Finnhub account dashboard 
+        // and copy/paste your actual 20-character key right here inside the quotes!
         const API_KEY = 'd8b1johr01qk20sp8sv0d8b1johr01qk20sp8svg'; 
         let stockChartInstance = null; 
 
@@ -109,13 +111,26 @@
 
             try {
                 const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
+                
+                // Smart Key Verification Diagnostic
+                if (response.status === 401) {
+                    errorMsg.innerText = "🚨 hold up, your API key is cooked. check your finnhub dashboard!";
+                    showErrorState();
+                    return;
+                }
+                
+                if (response.status === 429) {
+                    errorMsg.innerText = "⚠️ limit reached. wait a minute before sending another request.";
+                    showErrorState();
+                    return;
+                }
+
                 const data = await response.json();
 
-                if (!data.c) {
-                    errorMsg.classList.remove('hidden');
-                    mainContent.classList.add('hidden');
-                    lastUpdated.classList.add('hidden');
-                    resetBtn();
+                // Check if the actual company ticker asset doesn't exist
+                if (!data.c || data.s === "no_data") {
+                    errorMsg.innerText = "hey that stock branch dont exist btw";
+                    showErrorState();
                     return;
                 }
 
@@ -138,15 +153,24 @@
                 changeEl.innerText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${percentChange.toFixed(2)}%)`;
                 changeEl.className = change >= 0 ? "text-sm font-medium block mt-1 text-green-400" : "text-sm font-medium block mt-1 text-red-400";
 
+                // Securely run algorithmic calculator
                 calculatePrediction(data);
                 
-                // Fetch chart data with built-in fallback safety net
+                // Build historic trend visualizer chart
                 await fetchChartData(ticker, data);
 
             } catch (error) {
                 console.error("Error fetching stock data:", error);
-                errorMsg.classList.remove('hidden');
+                errorMsg.innerText = "internal connection error with the script engine.";
+                showErrorState();
             } finally {
+                resetBtn();
+            }
+
+            function showErrorState() {
+                errorMsg.classList.remove('hidden');
+                mainContent.classList.add('hidden');
+                lastUpdated.classList.add('hidden');
                 resetBtn();
             }
         }
@@ -159,7 +183,7 @@
             try {
                 const response = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${from}&to=${to}&token=${API_KEY}`);
                 
-                if (!response.ok) throw new Error("API tier restriction (403)");
+                if (!response.ok) throw new Error("Free tier restriction on historical candles.");
                 
                 const chartData = await response.json();
 
@@ -168,13 +192,12 @@
                     noteEl.className = "text-xs font-medium text-green-400 bg-green-950/50 px-2 py-1 rounded border border-green-800";
                     renderChart(ticker, chartData.t, chartData.c); 
                 } else {
-                    throw new Error("No data returned");
+                    throw new Error("No historic data records found.");
                 }
             } catch (error) {
-                console.warn(`${error.message}. Activating smart visualization engine.`);
+                // Automated backup engine triggers seamlessly if historical endpoints are blocked
                 noteEl.innerText = "generated trend matrix";
                 noteEl.className = "text-xs font-medium text-amber-400 bg-amber-950/50 px-2 py-1 rounded border border-amber-800";
-                
                 generateSimulatedData(ticker, currentQuote);
             }
         }
@@ -190,11 +213,10 @@
             for (let i = totalDays; i >= 0; i--) {
                 timestamps.push(now - (i * 24 * 60 * 60));
                 
-                // Add minor random market fluctuations walking up to current quote price
                 const variance = (Math.random() - 0.48) * (data.h - data.l || basePrice * 0.02);
                 basePrice += variance;
                 
-                if (i === 0) basePrice = data.c; // Lock final point to the exact current price
+                if (i === 0) basePrice = data.c; 
                 prices.push(Number(basePrice.toFixed(2)));
             }
 
@@ -216,7 +238,6 @@
             const isTrendUp = prices[prices.length - 1] >= prices[0];
             const lineColor = isTrendUp ? '#4ade80' : '#f87171'; 
             
-            // Create a subtle background gradient under the trend line
             const gradient = ctx.createLinearGradient(0, 0, 0, 250);
             gradient.addColorStop(0, isTrendUp ? 'rgba(74, 222, 128, 0.15)' : 'rgba(248, 113, 113, 0.15)');
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -255,6 +276,32 @@
                     }
                 }
             });
+        }
+
+        function calculatePrediction(data) {
+            const signalEl = document.getElementById('predictionSignal');
+            const reasoningEl = document.getElementById('predictionReasoning');
+
+            const currentPrice = data.c;
+            const openPrice = data.o;
+            const dailyHigh = data.h;
+            const dailyLow = data.l;
+            const dailyRange = dailyHigh - dailyLow;
+            const positionInRange = dailyRange > 0 ? (currentPrice - dailyLow) / dailyRange : 0.5;
+
+            if (currentPrice > openPrice && positionInRange > 0.7) {
+                signalEl.innerText = "all green on the happening front";
+                signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-green-950 text-green-400 border border-green-500";
+                reasoningEl.innerText = "this stock is currently doing well rn and is going up";
+            } else if (currentPrice < openPrice && positionInRange < 0.3) {
+                signalEl.innerText = "invest rn but do NOT sell rn";
+                signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-red-950 text-red-400 border border-red-500";
+                reasoningEl.innerText = "stock is cooked rn and is going DOWN";
+            } else {
+                signalEl.innerText = "meh nothing going on";
+                signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-gray-700 text-gray-300 border border-gray-500";
+                reasoningEl.innerText = "all quiet on the happening front...";
+            }
         }
 
         function resetBtn() {

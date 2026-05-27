@@ -40,7 +40,7 @@
                 </div>
 
                 <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 transition hover:border-gray-500">
-                    <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">range rn</h3>
+                    <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">range</h3>
                     <div class="mt-4 space-y-2">
                         <div class="flex justify-between">
                             <span class="text-gray-400">High:</span>
@@ -84,8 +84,6 @@
     </footer>
 
     <script>
-        // NOTE: If you keep getting API error flags, check your Finnhub account dashboard 
-        // and copy/paste your actual 20-character key right here inside the quotes!
         const API_KEY = 'd8b1johr01qk20sp8sv0d8b1johr01qk20sp8svg'; 
         let stockChartInstance = null; 
 
@@ -96,7 +94,6 @@
         tickerInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') fetchStockData();
         });
-
         async function fetchStockData() {
             const ticker = tickerInput.value.trim().toUpperCase();
             const errorMsg = document.getElementById('errorMessage');
@@ -107,20 +104,20 @@
             if (!ticker) return;
 
             trackBtn.disabled = true;
-            trackBtn.innerText = "Loading...";
+            trackBtn.innerText = "loading...";
 
             try {
                 const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
                 
                 // Smart Key Verification Diagnostic
                 if (response.status === 401) {
-                    errorMsg.innerText = "🚨 hold up, your API key is cooked. check your finnhub dashboard!";
+                    errorMsg.innerText = "api key issue go talk to big boss enterro";
                     showErrorState();
                     return;
                 }
                 
                 if (response.status === 429) {
-                    errorMsg.innerText = "⚠️ limit reached. wait a minute before sending another request.";
+                    errorMsg.innerText = "limit reached";
                     showErrorState();
                     return;
                 }
@@ -183,7 +180,7 @@
             try {
                 const response = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${from}&to=${to}&token=${API_KEY}`);
                 
-                if (!response.ok) throw new Error("Free tier restriction on historical candles.");
+                if (!response.ok) throw new Error("free tier something something ");
                 
                 const chartData = await response.json();
 
@@ -192,7 +189,7 @@
                     noteEl.className = "text-xs font-medium text-green-400 bg-green-950/50 px-2 py-1 rounded border border-green-800";
                     renderChart(ticker, chartData.t, chartData.c); 
                 } else {
-                    throw new Error("No historic data records found.");
+                    throw new Error("no data");
                 }
             } catch (error) {
                 // Automated backup engine triggers seamlessly if historical endpoints are blocked

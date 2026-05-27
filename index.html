@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>we do some stocks around here</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col justify-between">
 
@@ -19,50 +20,59 @@
         <div class="max-w-md mx-auto mb-8">
             <div class="flex gap-2">
                 <input id="tickerInput" type="text" placeholder="Enter Ticker (e.g., AAPL, TSLA)" 
-                       class="w-full px-4 py-2 rounded bg-gray-800 border border-gray-600 text-white focus:outline-none focus:border-green-400 uppercase">
-                <button id="trackBtn" class="bg-green-500 hover:bg-green-600 text-gray-900 font-bold px-6 py-2 rounded transition">
+                       class="w-full px-4 py-2 rounded bg-gray-800 border border-gray-600 text-white focus:outline-none focus:border-green-400 uppercase transition-colors">
+                <button id="trackBtn" class="bg-green-500 hover:bg-green-600 text-gray-900 font-bold px-6 py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed w-32 flex justify-center items-center">
                     Track
                 </button>
             </div>
             <p id="errorMessage" class="text-red-400 text-sm mt-2 hidden">hey that stock branch dont exist btw</p>
+            <p id="lastUpdated" class="text-gray-500 text-xs mt-2 hidden">Last updated: <span id="timeSpan"></span></p>
         </div>
 
-        <div id="stockDashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto hidden">
-            
-            <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700">
-                <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Current Price</h3>
-                <p id="stockTicker" class="text-xs text-gray-500 mt-1"></p>
-                <p id="currentPrice" class="text-3xl font-bold mt-2">$0.00</p>
-                <span id="priceChange" class="text-sm font-medium block mt-1">0.00 (0.00%)</span>
-            </div>
+        <div id="mainContent" class="hidden">
+            <div id="stockDashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-6">
+                
+                <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 transition hover:border-gray-500">
+                    <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Current Price</h3>
+                    <p id="stockTicker" class="text-xs text-gray-500 mt-1"></p>
+                    <p id="currentPrice" class="text-3xl font-bold mt-2">$0.00</p>
+                    <span id="priceChange" class="text-sm font-medium block mt-1">0.00 (0.00%)</span>
+                </div>
 
-            <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700">
-                <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">range rn</h3>
-                <div class="mt-4 space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">High:</span>
-                        <span id="dailyHigh" class="font-semibold">$0.00</span>
+                <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 transition hover:border-gray-500">
+                    <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">range rn</h3>
+                    <div class="mt-4 space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">High:</span>
+                            <span id="dailyHigh" class="font-semibold text-green-300">$0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Low:</span>
+                            <span id="dailyLow" class="font-semibold text-red-300">$0.00</span>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Low:</span>
-                        <span id="dailyLow" class="font-semibold">$0.00</span>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 flex flex-col justify-between transition hover:border-gray-500">
+                    <div>
+                        <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">short term</h3>
+                        <p class="text-xs text-gray-500 mt-1">based on Intraday Momentum</p>
                     </div>
+                    <div class="my-4">
+                        <span id="predictionSignal" class="text-2xl font-black px-3 py-1 rounded inline-block shadow-sm">
+                            NEUTRAL
+                        </span>
+                    </div>
+                    <p id="predictionReasoning" class="text-xs text-gray-400">No data loaded yet.</p>
                 </div>
             </div>
 
-            <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 flex flex-col justify-between">
-                <div>
-                    <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">short term</h3>
-                    <p class="text-xs text-gray-500 mt-1">based on Intraday Momentum</p>
+            <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 max-w-5xl mx-auto">
+                <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider mb-4">30-Day Trend Visualizer</h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="stockChart"></canvas>
                 </div>
-                <div class="my-4">
-                    <span id="predictionSignal" class="text-2xl font-black px-3 py-1 rounded inline-block">
-                        NEUTRAL
-                    </span>
-                </div>
-                <p id="predictionReasoning" class="text-xs text-gray-400">No data loaded yet.</p>
             </div>
-
         </div>
     </main>
 
@@ -71,41 +81,52 @@
     </footer>
 
     <script>
-        // w api
         const API_KEY = 'd8b1johr01qk20sp8sv0d8b1johr01qk20sp8svg'; 
+        let stockChartInstance = null; // Store chart instance to destroy it on new searches
 
-        document.getElementById('trackBtn').addEventListener('click', fetchStockData);
-        document.getElementById('tickerInput').addEventListener('keypress', function(e) {
+        const trackBtn = document.getElementById('trackBtn');
+        const tickerInput = document.getElementById('tickerInput');
+
+        trackBtn.addEventListener('click', fetchStockData);
+        tickerInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') fetchStockData();
         });
 
         async function fetchStockData() {
-            const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+            const ticker = tickerInput.value.trim().toUpperCase();
             const errorMsg = document.getElementById('errorMessage');
-            const dashboard = document.getElementById('stockDashboard');
+            const mainContent = document.getElementById('mainContent');
+            const lastUpdated = document.getElementById('lastUpdated');
+            const timeSpan = document.getElementById('timeSpan');
 
             if (!ticker) return;
 
-            if (API_KEY === 'YOUR_FREE_FINNHUB_API_KEY') {
-                alert("Please replace 'YOUR_FREE_FINNHUB_API_KEY' in the code with a real key from Finnhub.io!");
-                return;
-            }
+          
+            trackBtn.disabled = true;
+            trackBtn.innerText = "Loading...";
 
             try {
+              
                 const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
                 const data = await response.json();
 
-                // finnhub returns c=0 if symbol is invalid or has no data
                 if (!data.c) {
                     errorMsg.classList.remove('hidden');
-                    dashboard.classList.add('hidden');
+                    mainContent.classList.add('hidden');
+                    lastUpdated.classList.add('hidden');
+                    resetBtn();
                     return;
                 }
 
                 errorMsg.classList.add('hidden');
-                dashboard.classList.remove('hidden');
+                mainContent.classList.remove('hidden');
+                
+         
+                const now = new Date();
+                timeSpan.innerText = now.toLocaleTimeString();
+                lastUpdated.classList.remove('hidden');
 
-                // Update UI elements
+          
                 document.getElementById('stockTicker').innerText = ticker;
                 document.getElementById('currentPrice').innerText = `$${data.c.toFixed(2)}`;
                 document.getElementById('dailyHigh').innerText = `$${data.h.toFixed(2)}`;
@@ -116,32 +137,89 @@
                 const changeEl = document.getElementById('priceChange');
 
                 changeEl.innerText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${percentChange.toFixed(2)}%)`;
-                if (change >= 0) {
-                    changeEl.className = "text-sm font-medium block mt-1 text-green-400";
-                } else {
-                    changeEl.className = "text-sm font-medium block mt-1 text-red-400";
-                }
+                changeEl.className = change >= 0 ? "text-sm font-medium block mt-1 text-green-400" : "text-sm font-medium block mt-1 text-red-400";
 
-  
                 calculatePrediction(data);
+                
+                
+                await fetchChartData(ticker);
 
             } catch (error) {
                 console.error("Error fetching stock data:", error);
                 errorMsg.classList.remove('hidden');
+            } finally {
+                resetBtn();
             }
         }
-
+        async function fetchChartData(ticker) {
+            const to = Math.floor(Date.now() / 1000);
+            const from = to - (30 * 24 * 60 * 60); 
+            try {
+                const response = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${from}&to=${to}&token=${API_KEY}`);
+                const chartData = await response.json();
+                if (chartData.s === "ok") {
+                    renderChart(ticker, chartData.t, chartData.c); // t = timestamp, c = close price
+                } else {
+                    console.warn("No chart data available for this ticker.");
+                }
+            } catch (error) {
+                console.error("Error fetching chart data:", error);
+            }
+        }
+        function renderChart(ticker, timestamps, prices) {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            if (stockChartInstance) {
+                stockChartInstance.destroy();
+            }
+            const labels = timestamps.map(ts => {
+                const date = new Date(ts * 1000);
+                return `${date.getMonth() + 1}/${date.getDate()}`;
+            });
+            const isTrendUp = prices[prices.length - 1] >= prices[0];
+            const lineColor = isTrendUp ? '#4ade80' : '#f87171'; // green-400 or red-400
+            stockChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${ticker} Close Price`,
+                        data: prices,
+                        borderColor: lineColor,
+                        backgroundColor: 'rgba(0, 0, 0, 0)',
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        tension: 0.1 // curve
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#374151' }, // gray-700
+                            ticks: { color: '#9ca3af' } // gray-400
+                        },
+                        y: {
+                            grid: { color: '#374151' },
+                            ticks: { color: '#9ca3af' }
+                        }
+                    }
+                }
+            });
+        }
         function calculatePrediction(data) {
             const signalEl = document.getElementById('predictionSignal');
             const reasoningEl = document.getElementById('predictionReasoning');
-
             const currentPrice = data.c;
             const openPrice = data.o;
             const dailyHigh = data.h;
             const dailyLow = data.l;
             const dailyRange = dailyHigh - dailyLow;
             const positionInRange = dailyRange > 0 ? (currentPrice - dailyLow) / dailyRange : 0.5;
-
             if (currentPrice > openPrice && positionInRange > 0.7) {
                 signalEl.innerText = "all green on the happening front";
                 signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-green-950 text-green-400 border border-green-500";
@@ -155,6 +233,10 @@
                 signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-gray-700 text-gray-300 border border-gray-500";
                 reasoningEl.innerText = "all quiet on the happening front...";
             }
+        }
+        function resetBtn() {
+            trackBtn.disabled = false;
+            trackBtn.innerText = "Track";
         }
     </script>
 </body>

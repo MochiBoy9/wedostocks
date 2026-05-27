@@ -68,9 +68,18 @@
             </div>
 
             <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 max-w-5xl mx-auto relative">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">30 day trend</h3>
-                    <span id="chartSourceNote" class="text-xs font-medium text-gray-500 bg-gray-900 px-2 py-1 rounded"></span>
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <h3 id="chartTitle" class="text-gray-400 text-sm font-semibold uppercase tracking-wider">30 Day Trend</h3>
+                        <span id="chartSourceNote" class="text-xs font-medium text-gray-500 bg-gray-900 px-2 py-1 rounded"></span>
+                    </div>
+                    
+                    <div class="flex gap-1 bg-gray-900 p-1 rounded border border-gray-700 text-xs self-start sm:self-auto">
+                        <button onclick="changeTimeframe('1H')" id="tf-1H" class="px-3 py-1 rounded font-medium text-gray-400 hover:text-white transition">1H</button>
+                        <button onclick="changeTimeframe('1D')" id="tf-1D" class="px-3 py-1 rounded font-medium text-gray-400 hover:text-white transition">1D</button>
+                        <button onclick="changeTimeframe('1W')" id="tf-1W" class="px-3 py-1 rounded font-medium text-gray-400 hover:text-white transition">1W</button>
+                        <button onclick="changeTimeframe('30D')" id="tf-30D" class="px-3 py-1 rounded font-medium bg-green-500 text-gray-900 transition">30D</button>
+                    </div>
                 </div>
                 <div class="relative h-64 w-full">
                     <canvas id="stockChart"></canvas>
@@ -86,6 +95,11 @@
     <script>
         const API_KEY = 'd8b1johr01qk20sp8sv0d8b1johr01qk20sp8svg'; 
         let stockChartInstance = null; 
+        
+        // Tracking state values for switching intervals seamlessly
+        let activeTimeframe = '30D';
+        let lastTicker = '';
+        let lastQuoteData = null;
 
         const trackBtn = document.getElementById('trackBtn');
         const tickerInput = document.getElementById('tickerInput');
@@ -94,6 +108,7 @@
         tickerInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') fetchStockData();
         });
+
         async function fetchStockData() {
             const ticker = tickerInput.value.trim().toUpperCase();
             const errorMsg = document.getElementById('errorMessage');
@@ -109,7 +124,6 @@
             try {
                 const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
                 
-                // Smart Key Verification Diagnostic
                 if (response.status === 401) {
                     errorMsg.innerText = "api key issue go talk to big boss enterro";
                     showErrorState();
@@ -124,7 +138,6 @@
 
                 const data = await response.json();
 
-                // Check if the actual company ticker asset doesn't exist
                 if (!data.c || data.s === "no_data") {
                     errorMsg.innerText = "hey that stock branch dont exist btw";
                     showErrorState();
@@ -150,10 +163,12 @@
                 changeEl.innerText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${percentChange.toFixed(2)}%)`;
                 changeEl.className = change >= 0 ? "text-sm font-medium block mt-1 text-green-400" : "text-sm font-medium block mt-1 text-red-400";
 
-                // Securely run algorithmic calculator
                 calculatePrediction(data);
                 
-                // Build historic trend visualizer chart
+                // Cache standard variables in current session memory context
+                lastTicker = ticker;
+                lastQuoteData = data;
+
                 await fetchChartData(ticker, data);
 
             } catch (error) {
@@ -173,14 +188,23 @@
         }
 
         async function fetchChartData(ticker, currentQuote) {
-            const to = Math.floor(Date.now() / 1000);
-            const from = to - (30 * 24 * 60 * 60); 
             const noteEl = document.getElementById('chartSourceNote');
+            
+            // Map timeframe requirements to timestamp ranges and endpoints
+            const config = {
+                '1H': { resolution: '1', secondsAgo: 3600 },
+                '1D': { resolution: '15', secondsAgo: 86400 },
+                '1W': { resolution: '60', secondsAgo: 7 * 86400 },
+                '30D': { resolution: 'D', secondsAgo: 30 * 86400 }
+            }[activeTimeframe];
+
+            const to = Math.floor(Date.now() / 1000);
+            const from = to - config.secondsAgo; 
 
             try {
-                const response = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${from}&to=${to}&token=${API_KEY}`);
+                const response = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=${config.resolution}&from=${from}&to=${to}&token=${API_KEY}`);
                 
-                if (!response.ok) throw new Error("free tier something something ");
+                if (!response.ok) throw new Error("free tier restriction or endpoint blocked.");
                 
                 const chartData = await response.json();
 
@@ -192,7 +216,6 @@
                     throw new Error("no data");
                 }
             } catch (error) {
-                // Automated backup engine triggers seamlessly if historical endpoints are blocked
                 noteEl.innerText = "generated trend matrix";
                 noteEl.className = "text-xs font-medium text-amber-400 bg-amber-950/50 px-2 py-1 rounded border border-amber-800";
                 generateSimulatedData(ticker, currentQuote);
@@ -200,17 +223,24 @@
         }
 
         function generateSimulatedData(ticker, data) {
-            const totalDays = 30;
+            // Adjust the fidelity point density based on selected timeframe view
+            const matrixConfig = {
+                '1H': { points: 60, interval: 60 },      // 60 points, 1 min apart
+                '1D': { points: 24, interval: 3600 },    // 24 points, 1 hour apart
+                '1W': { points: 28, interval: 21600 },   // 28 points, 6 hours apart
+                '30D': { points: 30, interval: 86400 }   // 30 points, 24 hours apart
+            }[activeTimeframe];
+
             const prices = [];
             const timestamps = [];
             
-            let basePrice = data.c - (data.d * 1.5); 
+            let basePrice = data.c - (data.d * 0.5); 
             const now = Math.floor(Date.now() / 1000);
 
-            for (let i = totalDays; i >= 0; i--) {
-                timestamps.push(now - (i * 24 * 60 * 60));
+            for (let i = matrixConfig.points; i >= 0; i--) {
+                timestamps.push(now - (i * matrixConfig.interval));
                 
-                const variance = (Math.random() - 0.48) * (data.h - data.l || basePrice * 0.02);
+                const variance = (Math.random() - 0.49) * (data.h - data.l || basePrice * 0.015);
                 basePrice += variance;
                 
                 if (i === 0) basePrice = data.c; 
@@ -227,9 +257,14 @@
                 stockChartInstance.destroy();
             }
 
+            // Clean format label system relative to the tracking scale scope
             const labels = timestamps.map(ts => {
                 const date = new Date(ts * 1000);
-                return `${date.getMonth() + 1}/${date.getDate()}`;
+                if (activeTimeframe === '1H' || activeTimeframe === '1D') {
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                } else {
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                }
             });
 
             const isTrendUp = prices[prices.length - 1] >= prices[0];
@@ -252,7 +287,7 @@
                         borderWidth: 2,
                         pointRadius: 1,
                         pointHoverRadius: 6,
-                        tension: 0.2 
+                        tension: 0.15 
                     }]
                 },
                 options: {
@@ -264,7 +299,7 @@
                     scales: {
                         x: {
                             grid: { color: '#1f2937' }, 
-                            ticks: { color: '#9ca3af', maxTicksLimit: 10 } 
+                            ticks: { color: '#9ca3af', maxTicksLimit: 12 } 
                         },
                         y: {
                             grid: { color: '#1f2937' },
@@ -273,6 +308,30 @@
                     }
                 }
             });
+        }
+
+        function changeTimeframe(timeframeId) {
+            if (activeTimeframe === timeframeId) return;
+
+            // Remove active style classes from old node selection
+            document.getElementById(`tf-${activeTimeframe}`).className = "px-3 py-1 rounded font-medium text-gray-400 hover:text-white transition";
+            
+            // Inject highlight style configuration onto new timeframe target
+            document.getElementById(`tf-${timeframeId}`).className = "px-3 py-1 rounded font-medium bg-green-500 text-gray-900 transition";
+            
+            activeTimeframe = timeframeId;
+            
+            document.getElementById('chartTitle').innerText = {
+                '1H': '1 Hour Trend',
+                '1D': '1 Day Trend',
+                '1W': '1 Week Trend',
+                '30D': '30 Day Trend'
+            }[timeframeId];
+
+            // Re-render chart utilizing memory configuration arrays instantly
+            if (lastTicker && lastQuoteData) {
+                fetchChartData(lastTicker, lastQuoteData);
+            }
         }
 
         function calculatePrediction(data) {

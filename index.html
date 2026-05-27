@@ -100,6 +100,9 @@
         let activeTimeframe = '30D';
         let lastTicker = '';
         let lastQuoteData = null;
+        
+        // Persistent cache to stop graphs mutating randomly when clicking back and forth
+        let chartCache = {};
 
         const trackBtn = document.getElementById('trackBtn');
         const tickerInput = document.getElementById('tickerInput');
@@ -165,7 +168,8 @@
 
                 calculatePrediction(data);
                 
-                // Cache standard variables in current session memory context
+                // Clear old historical cached trends because a fresh ticker search session was processed
+                chartCache = {};
                 lastTicker = ticker;
                 lastQuoteData = data;
 
@@ -190,7 +194,15 @@
         async function fetchChartData(ticker, currentQuote) {
             const noteEl = document.getElementById('chartSourceNote');
             
-            // Map timeframe requirements to timestamp ranges and endpoints
+            // Check cache first to avoid random matrix regeneration shifts
+            if (chartCache[activeTimeframe]) {
+                const cached = chartCache[activeTimeframe];
+                noteEl.innerText = cached.source;
+                noteEl.className = cached.sourceClass;
+                renderChart(ticker, cached.t, cached.c);
+                return;
+            }
+            
             const config = {
                 '1H': { resolution: '1', secondsAgo: 3600 },
                 '1D': { resolution: '15', secondsAgo: 86400 },
@@ -209,26 +221,38 @@
                 const chartData = await response.json();
 
                 if (chartData.s === "ok") {
-                    noteEl.innerText = "live feed";
-                    noteEl.className = "text-xs font-medium text-green-400 bg-green-950/50 px-2 py-1 rounded border border-green-800";
+                    const srcText = "live feed";
+                    const srcClass = "text-xs font-medium text-green-400 bg-green-950/50 px-2 py-1 rounded border border-green-800";
+                    
+                    chartCache[activeTimeframe] = {
+                        t: chartData.t,
+                        c: chartData.c,
+                        source: srcText,
+                        sourceClass: srcClass
+                    };
+
+                    noteEl.innerText = srcText;
+                    noteEl.className = srcClass;
                     renderChart(ticker, chartData.t, chartData.c); 
                 } else {
                     throw new Error("no data");
                 }
             } catch (error) {
-                noteEl.innerText = "generated trend matrix";
-                noteEl.className = "text-xs font-medium text-amber-400 bg-amber-950/50 px-2 py-1 rounded border border-amber-800";
-                generateSimulatedData(ticker, currentQuote);
+                const srcText = "generated trend matrix";
+                const srcClass = "text-xs font-medium text-amber-400 bg-amber-950/50 px-2 py-1 rounded border border-amber-800";
+                
+                noteEl.innerText = srcText;
+                noteEl.className = srcClass;
+                generateSimulatedData(ticker, currentQuote, srcText, srcClass);
             }
         }
 
-        function generateSimulatedData(ticker, data) {
-            // Adjust the fidelity point density based on selected timeframe view
+        function generateSimulatedData(ticker, data, srcText, srcClass) {
             const matrixConfig = {
-                '1H': { points: 60, interval: 60 },      // 60 points, 1 min apart
-                '1D': { points: 24, interval: 3600 },    // 24 points, 1 hour apart
-                '1W': { points: 28, interval: 21600 },   // 28 points, 6 hours apart
-                '30D': { points: 30, interval: 86400 }   // 30 points, 24 hours apart
+                '1H': { points: 60, interval: 60 },      
+                '1D': { points: 24, interval: 3600 },    
+                '1W': { points: 28, interval: 21600 },   
+                '30D': { points: 30, interval: 86400 }   
             }[activeTimeframe];
 
             const prices = [];
@@ -247,6 +271,14 @@
                 prices.push(Number(basePrice.toFixed(2)));
             }
 
+            // Save values to state data cache to preserve this generated setup
+            chartCache[activeTimeframe] = {
+                t: timestamps,
+                c: prices,
+                source: srcText,
+                sourceClass: srcClass
+            };
+
             renderChart(ticker, timestamps, prices);
         }
 
@@ -257,7 +289,6 @@
                 stockChartInstance.destroy();
             }
 
-            // Clean format label system relative to the tracking scale scope
             const labels = timestamps.map(ts => {
                 const date = new Date(ts * 1000);
                 if (activeTimeframe === '1H' || activeTimeframe === '1D') {
@@ -313,10 +344,7 @@
         function changeTimeframe(timeframeId) {
             if (activeTimeframe === timeframeId) return;
 
-            // Remove active style classes from old node selection
             document.getElementById(`tf-${activeTimeframe}`).className = "px-3 py-1 rounded font-medium text-gray-400 hover:text-white transition";
-            
-            // Inject highlight style configuration onto new timeframe target
             document.getElementById(`tf-${timeframeId}`).className = "px-3 py-1 rounded font-medium bg-green-500 text-gray-900 transition";
             
             activeTimeframe = timeframeId;
@@ -328,7 +356,6 @@
                 '30D': '30 Day Trend'
             }[timeframeId];
 
-            // Re-render chart utilizing memory configuration arrays instantly
             if (lastTicker && lastQuoteData) {
                 fetchChartData(lastTicker, lastQuoteData);
             }

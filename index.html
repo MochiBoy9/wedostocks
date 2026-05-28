@@ -260,15 +260,15 @@
             const dailyRange = dailyHigh - dailyLow;
             const positionInRange = dailyRange > 0 ? (currentPrice - dailyLow) / dailyRange : 0.5;
             if (currentPrice > openPrice && positionInRange > 0.7) {
-                signalEl.innerText = "all green on the happening front";
+                signalEl.innerText = "Price Gain";
                 signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-green-950 text-green-400 border border-green-500";
                 reasoningEl.innerText = "this stock is currently doing well rn and is going up";
             } else if (currentPrice < openPrice && positionInRange < 0.3) {
-                signalEl.innerText = "invest rn but do NOT sell rn";
+                signalEl.innerText = "Price Loss";
                 signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-red-950 text-red-400 border border-red-500";
                 reasoningEl.innerText = "stock is cooked rn and is going DOWN";
             } else {
-                signalEl.innerText = "meh nothing going on";
+                signalEl.innerText = "No Change";
                 signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-gray-700 text-gray-300 border border-gray-500";
                 reasoningEl.innerText = "all quiet on the happening front...";
             }

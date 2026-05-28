@@ -1,0 +1,37 @@
+name: we do stocks
+
+on:
+  schedule:
+    # upd 6 hrs
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # button, apparently??
+
+jobs:
+  build-and-track:
+    runs-on: ubuntu-latest
+    
+    # git perms
+    permissions:
+      contents: write
+
+    steps:
+      - name: find repository source
+        uses: actions/checkout@v4
+
+      - name: start nodejs
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: stock trackin
+        env:
+          FINNHUB_TOKEN: ${{ secrets.FINNHUB_TOKEN }}
+        run: node fetch-data.js
+
+      - name: push data
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add stock-data.json
+          git commit -m "auto: compiled data tracking metrics [skip ci]" || exit 0
+          git push

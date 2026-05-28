@@ -50,7 +50,7 @@
                     </div>
                     <div class="my-4">
                         <span id="predictionSignal" class="text-2xl font-black px-3 py-1 rounded inline-block shadow-sm">
-                            NEUTRAL
+                            neutral
                         </span>
                     </div>
                     <p id="predictionReasoning" class="text-xs text-gray-400">no data loaded yet</p>
@@ -59,7 +59,7 @@
             <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 max-w-5xl mx-auto relative">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-3">
-                        <h3 id="chartTitle" class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Market Trend Overview</h3>
+                        <h3 id="chartTitle" class="text-gray-400 text-sm font-semibold uppercase tracking-wider">trend overview</h3>
                         <span id="chartSourceNote" class="text-xs font-medium text-gray-500 bg-gray-900 px-2 py-1 rounded"></span>
                     </div>
                 </div>
@@ -70,15 +70,14 @@
         </div>
     </main>
     <footer class="bg-gray-800 p-4 border-t border-gray-700 text-center text-xs text-gray-500">
-        data tracked via finnhub engine api, logged using github actions background chron servers
+        data tracked via finnhub engine api, backend used w/ github actions 
     </footer>
     <script>
         let stockChartInstance = null; 
         let activeTicker = '';
         let chartCache = {}; 
-        // add stonks here
+        // add stonks here but remember to put it into backend first - me
         const PRESET_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'AMZN', 'GOOGL', 'META', 'NFLX'];
-
         window.addEventListener('DOMContentLoaded', () => {
             renderPresetCards();
             selectAsset(PRESET_TICKERS[0]);
@@ -121,13 +120,13 @@
             try {
                 const response = await fetch('./stock-data.json');
                 if (!response.ok) {
-                    somethingwentwrong("stock-data.json file not verified or compiled yet. run action worker once.");
+                    somethingwentwrong("this is only shown if SOMEONE got rid of actions brah");
                     return;
                 }
                 const dataStore = await response.json();
                 const branchData = dataStore[ticker];
                 if (!branchData || !branchData.current) {
-                    somethingwentwrong(`target branch element tracking index missing data for node: ${ticker}`);
+                    somethingwentwrong(`index missing supposedly at ${ticker}`);
                     return;
                 }
                 const data = branchData.current;
@@ -154,7 +153,6 @@
                 somethingwentwrong("database is unreadable.");
             }
         }
-
         function somethingwentwrong(msg) {
             const errorMsg = document.getElementById('errorMessage');
             errorMsg.innerText = msg;
@@ -162,7 +160,6 @@
             document.getElementById('mainContent').classList.add('hidden');
             document.getElementById('lastUpdated').classList.add('hidden');
         }
-
         async function chartdataorsum(ticker, historyArray, currentQuote) {
             const noteEl = document.getElementById('chartSourceNote');
             if (chartCache[ticker]) {
@@ -172,15 +169,12 @@
                 chartify(ticker, cached.t, cached.c);
                 return;
             }
-            
             if (historyArray && historyArray.length > 1) {
                 const srcText = "backend core engine log";
                 const srcClass = "text-xs font-medium text-green-400 bg-green-950/50 px-2 py-1 rounded border border-green-800";
                 const timestamps = historyArray.map(point => point.t);
                 const prices = historyArray.map(point => point.c);
-
                 chartCache[ticker] = { t: timestamps, c: prices, source: srcText, sourceClass: srcClass };
-                
                 noteEl.innerText = srcText;
                 noteEl.className = srcClass;
                 chartify(ticker, timestamps, prices);
@@ -193,15 +187,12 @@
                 lieaboutdata(ticker, currentQuote, srcText, srcClass);
             }
         }
-
         function lieaboutdata(ticker, data, srcText, srcClass) {
             const prices = [];
             const timestamps = [];
-            
             let basePrice = data.c - (data.d * 0.5); 
             const now = Math.floor(Date.now() / 1000);
             const intervalsAgo = 15; 
-
             for (let i = intervalsAgo; i >= 0; i--) {
                 timestamps.push(now - (i * 86400));
                 const variance = (Math.random() - 0.49) * (data.h - data.l || basePrice * 0.015);
@@ -209,30 +200,23 @@
                 if (i === 0) basePrice = data.c; 
                 prices.push(Number(basePrice.toFixed(2)));
             }
-
             chartCache[ticker] = { t: timestamps, c: prices, source: srcText, sourceClass: srcClass };
             chartify(ticker, timestamps, prices);
         }
-
         function chartify(ticker, timestamps, prices) {
             const ctx = document.getElementById('stockChart').getContext('2d');
-
             if (stockChartInstance) {
                 stockChartInstance.destroy();
             }
-
             const labels = timestamps.map(ts => {
                 const date = new Date(ts * 1000);
                 return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:00`;
             });
-
             const isTrendUp = prices[prices.length - 1] >= prices[0];
             const lineColor = isTrendUp ? '#4ade80' : '#f87171'; 
-            
             const gradient = ctx.createLinearGradient(0, 0, 0, 250);
             gradient.addColorStop(0, isTrendUp ? 'rgba(74, 222, 128, 0.15)' : 'rgba(248, 113, 113, 0.15)');
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
             stockChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -266,18 +250,15 @@
                 }
             });
         }
-
         function flipAcoin(data) {
             const signalEl = document.getElementById('predictionSignal');
             const reasoningEl = document.getElementById('predictionReasoning');
-
             const currentPrice = data.c;
             const openPrice = data.o;
             const dailyHigh = data.h;
             const dailyLow = data.l;
             const dailyRange = dailyHigh - dailyLow;
             const positionInRange = dailyRange > 0 ? (currentPrice - dailyLow) / dailyRange : 0.5;
-
             if (currentPrice > openPrice && positionInRange > 0.7) {
                 signalEl.innerText = "all green on the happening front";
                 signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-green-950 text-green-400 border border-green-500";

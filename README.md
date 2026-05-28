@@ -1,4 +1,4 @@
-# we do some stocks around here...
+# we do sum stocks around here (WDSSAH)
 
 WDSSAH is a small stock website i created using my prior knowledge of my weather website (ay what the time) and developed using talwind css and the finnhub api! built as a passion project to get into the concept of stocks, and also built as a small project i made since i was a bit bored
 

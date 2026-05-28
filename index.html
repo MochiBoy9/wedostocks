@@ -19,8 +19,8 @@
     <main class="container mx-auto p-6 flex-grow">
         <div class="max-w-5xl mx-auto mb-8">
             <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 text-center md:text-left">Select an Asset Terminal</h2>
-            <div id="assetCardsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                </div>
+            <div id="assetCardsGrid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+            </div>
             <p id="errorMessage" class="text-red-400 text-sm mt-4 hidden text-center">internal connection error with the script engine.</p>
             <p id="lastUpdated" class="text-gray-500 text-xs mt-2 hidden text-center">last backend archive check: <span id="timeSpan"></span></p>
         </div>
@@ -86,7 +86,8 @@
         let activeTicker = '';
         let chartCache = {}; 
         
-        const PRESET_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA'];
+        // add stonks here
+        const PRESET_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'AMZN', 'GOOGL', 'META', 'NFLX'];
 
         window.addEventListener('DOMContentLoaded', () => {
             renderPresetCards();
@@ -100,10 +101,10 @@
             PRESET_TICKERS.forEach(ticker => {
                 const card = document.createElement('div');
                 card.id = `card-${ticker}`;
-                card.className = "bg-gray-800 border border-gray-700 p-4 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide transition-all hover:border-gray-500 text-gray-300 hover:text-white";
+                card.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide transition-all hover:border-gray-500 text-gray-300 hover:text-white";
                 card.innerHTML = `
-                    <div class="text-lg uppercase">${ticker}</div>
-                    <div class="text-xs text-gray-500 font-normal mt-1">View Tracked Sync</div>
+                    <div class="text-base uppercase">${ticker}</div>
+                    <div class="text-[10px] text-gray-500 font-normal mt-0.5">Track Sync</div>
                 `;
                 card.addEventListener('click', () => selectAsset(ticker));
                 container.appendChild(card);
@@ -116,13 +117,13 @@
             PRESET_TICKERS.forEach(t => {
                 const cardEl = document.getElementById(`card-${t}`);
                 if (cardEl) {
-                    cardEl.className = "bg-gray-800 border border-gray-700 p-4 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide transition-all hover:border-gray-500 text-gray-300 hover:text-white";
+                    cardEl.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide transition-all hover:border-gray-500 text-gray-300 hover:text-white";
                 }
             });
 
             const activeCard = document.getElementById(`card-${ticker}`);
             if (activeCard) {
-                activeCard.className = "bg-green-950/40 border-green-500 p-4 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide text-green-400 ring-1 ring-green-900/50";
+                activeCard.className = "bg-green-950/40 border-green-500 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide text-green-400 ring-1 ring-green-900/50";
             }
 
             activeTicker = ticker;
@@ -136,7 +137,6 @@
             const timeSpan = document.getElementById('timeSpan');
 
             try {
-                // sync
                 const response = await fetch('./stock-data.json');
                 
                 if (!response.ok) {
@@ -203,7 +203,6 @@
                 return;
             }
             
-            // check backend
             if (historyArray && historyArray.length > 1) {
                 const srcText = "backend core engine log";
                 const srcClass = "text-xs font-medium text-green-400 bg-green-950/50 px-2 py-1 rounded border border-green-800";
@@ -217,7 +216,6 @@
                 noteEl.className = srcClass;
                 renderChart(ticker, timestamps, prices);
             } else {
-                // generates lines until github actions does smtn
                 const srcText = "accumulating background records";
                 const srcClass = "text-xs font-medium text-amber-400 bg-amber-950/50 px-2 py-1 rounded border border-amber-800";
                 

@@ -1,11 +1,11 @@
 const fs = require('fs');
 
-const TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA'];
+const TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'AMZN', 'GOOGL', 'META', 'NFLX'];
 const API_KEY = process.env.FINNHUB_TOKEN; 
 const FILE_PATH = './stock-data.json';
 
 async function runTracker() {
-    // 1. Load existing data if it exists, otherwise start fresh
+    // here be dragons
     let dataStore = {};
     if (fs.existsSync(FILE_PATH)) {
         try {

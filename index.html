@@ -140,13 +140,13 @@
             try {
                 const response = await fetch(`./stock-data.json?t=${new Date().getTime()}`); 
                 if (!response.ok) {
-                    showErrorState("stock-data.json file not verified or compiled yet. run action worker once.");
+                    showErrorState("who the hell forgot to run codespace");
                     return;
                 }
                 const dataStore = await response.json();
                 const branchData = dataStore[ticker]
                 if (!branchData || !branchData.current) {
-                    showErrorState(`target branch element tracking index missing data for node: ${ticker}`);
+                    showErrorState(`cant find: ${ticker}`);
                     return;
                 }
                 const data = branchData.current;
@@ -168,8 +168,8 @@
                 document.getElementById('chartTitle').innerText = `${ticker} Compiled History`;
                 await chartdata(ticker, branchData.history, data);
             } catch (error) {
-                console.error("Static core engine communication error:", error);
-                showErrorState("internal database file structure missing or unreadable.");
+                console.error("engine error:", error);
+                showErrorState("yo the database is fucking gone");
             }
         }
         function showErrorState(msg) {

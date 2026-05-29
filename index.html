@@ -1,66 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>we do some stocks around here</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configure Tailwind to listen for the manual HTML class toggle
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col justify-between">
-    <header class="bg-gray-800 p-5 shadow-md border-b border-gray-700">
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
+
+    <header class="bg-white dark:bg-gray-800 p-5 shadow-md border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-green-400">we do sum stocks 'round here</h1>
-            <span class="text-sm text-gray-400">small stock market software built on tailwind</span>
+            <div>
+                <h1 class="text-2xl font-bold text-green-600 dark:text-green-400">we do sum stocks 'round here</h1>
+                <span class="text-sm text-gray-500 dark:text-gray-400">small stock market software built on tailwind</span>
+            </div>
+            
+            <button id="themeToggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                <svg id="moonIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <svg id="sunIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </button>
         </div>
     </header>
+
     <main class="container mx-auto p-6 flex-grow">
-        <div class="max-w-5xl mx-auto mb-8">
-            <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 text-center md:text-left">Select an Asset Terminal</h2>
-            <div id="assetCardsGrid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div class="max-w-6xl mx-auto mb-8">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 text-center md:text-left">Select an Asset Terminal</h2>
+            <div id="assetCardsGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
             </div>
-            <p id="errorMessage" class="text-red-400 text-sm mt-4 hidden text-center">internal connection error with the script engine.</p>
+            <p id="errorMessage" class="text-red-500 dark:text-red-400 text-sm mt-4 hidden text-center">internal connection error with the script engine.</p>
             <p id="lastUpdated" class="text-gray-500 text-xs mt-2 hidden text-center">last backend archive check: <span id="timeSpan"></span></p>
         </div>
+
         <div id="mainContent" class="hidden">
-            <div id="stockDashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-6">   
-                <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 transition hover:border-gray-500">
-                    <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Current Price</h3>
-                    <p id="stockTicker" class="text-xs text-gray-500 mt-1"></p>
-                    <p id="currentPrice" class="text-3xl font-bold mt-2">$0.00</p>
+            <div id="stockDashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-6">
+                
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 transition hover:border-gray-400 dark:hover:border-gray-500">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">Current Price</h3>
+                    <p id="stockTicker" class="text-xs text-gray-400 dark:text-gray-500 mt-1"></p>
+                    <p id="currentPrice" class="text-3xl font-bold mt-2 text-gray-900 dark:text-white">$0.00</p>
                     <span id="priceChange" class="text-sm font-medium block mt-1">0.00 (0.00%)</span>
                 </div>
-                <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 transition hover:border-gray-500">
-                    <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">range</h3>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 transition hover:border-gray-400 dark:hover:border-gray-500">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">Range</h3>
                     <div class="mt-4 space-y-2">
                         <div class="flex justify-between">
-                            <span class="text-gray-400">High:</span>
-                            <span id="dailyHigh" class="font-semibold text-green-300">$0.00</span>
+                            <span class="text-gray-500 dark:text-gray-400">High:</span>
+                            <span id="dailyHigh" class="font-semibold text-green-600 dark:text-green-300">$0.00</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Low:</span>
-                            <span id="dailyLow" class="font-semibold text-red-300">$0.00</span>
+                            <span class="text-gray-500 dark:text-gray-400">Low:</span>
+                            <span id="dailyLow" class="font-semibold text-red-600 dark:text-red-300">$0.00</span>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 flex flex-col justify-between transition hover:border-gray-500">
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 flex flex-col justify-between transition hover:border-gray-400 dark:hover:border-gray-500">
                     <div>
-                        <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">current short term</h3>
-                        <p class="text-xs text-gray-500 mt-1">based on intraday momentum</p>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">current short term</h3>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">based on intraday momentum</p>
                     </div>
                     <div class="my-4">
-                        <span id="predictionSignal" class="text-2xl font-black px-3 py-1 rounded inline-block shadow-sm">
-                            neutral
+                        <span id="predictionSignal" class="text-xl lg:text-2xl font-black px-3 py-1 rounded inline-block shadow-sm">
+                            NEUTRAL
                         </span>
                     </div>
-                    <p id="predictionReasoning" class="text-xs text-gray-400">no data loaded yet</p>
+                    <p id="predictionReasoning" class="text-xs text-gray-500 dark:text-gray-400">no data loaded yet</p>
                 </div>
             </div>
-            <div class="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 max-w-5xl mx-auto relative">
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 max-w-6xl mx-auto relative transition-colors duration-300">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-3">
-                        <h3 id="chartTitle" class="text-gray-400 text-sm font-semibold uppercase tracking-wider">trend overview</h3>
-                        <span id="chartSourceNote" class="text-xs font-medium text-gray-500 bg-gray-900 px-2 py-1 rounded"></span>
+                        <h3 id="chartTitle" class="text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">Market Trend Overview</h3>
+                        <span id="chartSourceNote" class="text-xs font-medium text-gray-600 bg-gray-100 dark:text-gray-500 dark:bg-gray-900 px-2 py-1 rounded"></span>
                     </div>
                 </div>
                 <div class="relative h-64 w-full">
@@ -69,154 +89,216 @@
             </div>
         </div>
     </main>
-    <footer class="bg-gray-800 p-4 border-t border-gray-700 text-center text-xs text-gray-500">
-        data tracked via finnhub engine api, backend used w/ github actions 
+
+    <footer class="bg-white dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-700 text-center text-xs text-gray-500 transition-colors duration-300">
+        data tracked via finnhub engine api, logged using github actions background hourly servers
     </footer>
+
     <script>
         let stockChartInstance = null; 
         let activeTicker = '';
         let chartCache = {}; 
-        // add stonks here but remember to put it into backend first - me
-        const PRESET_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'AMZN', 'GOOGL', 'META', 'NFLX'];
+        let currentChartData = { timestamps: [], prices: [] }; 
+        
+        // Fully expanded 16-stock matrix
+        const PRESET_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'AMZN', 'GOOGL', 'META', 'NFLX', 'AMD', 'INTC', 'SPY', 'QQQ', 'DIS', 'BA', 'WMT', 'JPM'];
+
+
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+
+        themeToggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+
+            if (currentChartData.timestamps.length > 0) {
+                renderChart(activeTicker, currentChartData.timestamps, currentChartData.prices);
+            }
+        });
+
         window.addEventListener('DOMContentLoaded', () => {
             renderPresetCards();
             selectAsset(PRESET_TICKERS[0]);
         });
+
         function renderPresetCards() {
             const container = document.getElementById('assetCardsGrid');
-            container.innerHTML = '';  
+            container.innerHTML = '';
+            
             PRESET_TICKERS.forEach(ticker => {
                 const card = document.createElement('div');
                 card.id = `card-${ticker}`;
-                card.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide transition-all hover:border-gray-500 text-gray-300 hover:text-white";
+                card.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide transition-all hover:border-gray-400 dark:hover:border-gray-500 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white";
                 card.innerHTML = `
-                    <div class="text-base uppercase">${ticker}</div>
-                    <div class="text-[10px] text-gray-500 font-normal mt-0.5">Track Sync</div>
+                    <div class="text-sm md:text-base uppercase">${ticker}</div>
+                    <div class="text-[10px] text-gray-400 dark:text-gray-500 font-normal mt-0.5">stock</div>
                 `;
                 card.addEventListener('click', () => selectAsset(ticker));
                 container.appendChild(card);
             });
         }
+
         async function selectAsset(ticker) {
             if (activeTicker === ticker) return;
+            
             PRESET_TICKERS.forEach(t => {
                 const cardEl = document.getElementById(`card-${t}`);
                 if (cardEl) {
-                    cardEl.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide transition-all hover:border-gray-500 text-gray-300 hover:text-white";
+                    cardEl.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide transition-all hover:border-gray-400 dark:hover:border-gray-500 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white";
                 }
             });
+
             const activeCard = document.getElementById(`card-${ticker}`);
             if (activeCard) {
-                activeCard.className = "bg-green-950/40 border-green-500 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide text-green-400 ring-1 ring-green-900/50";
+                activeCard.className = "bg-green-50 dark:bg-green-950/40 border-green-500 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide text-green-600 dark:text-green-400 ring-1 ring-green-300 dark:ring-green-900/50";
             }
+
             activeTicker = ticker;
-            await findTheStocks(ticker);
+            await getdata(ticker);
         }
-        async function findTheStocks(ticker) {
+
+        async function getdata(ticker) {
             const errorMsg = document.getElementById('errorMessage');
             const mainContent = document.getElementById('mainContent');
             const lastUpdated = document.getElementById('lastUpdated');
             const timeSpan = document.getElementById('timeSpan');
+
             try {
-                const response = await fetch('./stock-data.json');
+        
+                const response = await fetch(`./stock-data.json?t=${new Date().getTime()}`);
+                
                 if (!response.ok) {
-                    somethingwentwrong("this is only shown if SOMEONE got rid of actions brah");
+                    showErrorState("stock-data.json file not verified or compiled yet. run action worker once.");
                     return;
                 }
+
                 const dataStore = await response.json();
                 const branchData = dataStore[ticker];
+
                 if (!branchData || !branchData.current) {
-                    somethingwentwrong(`index missing supposedly at ${ticker}`);
+                    showErrorState(`target branch element tracking index missing data for node: ${ticker}`);
                     return;
                 }
+
                 const data = branchData.current;
+
                 errorMsg.classList.add('hidden');
                 mainContent.classList.remove('hidden');
+                
                 const now = new Date();
                 timeSpan.innerText = now.toLocaleTimeString();
                 lastUpdated.classList.remove('hidden');
+
                 document.getElementById('stockTicker').innerText = ticker;
                 document.getElementById('currentPrice').innerText = `$${data.c.toFixed(2)}`;
                 document.getElementById('dailyHigh').innerText = `$${data.h.toFixed(2)}`;
                 document.getElementById('dailyLow').innerText = `$${data.l.toFixed(2)}`;
+
                 const change = data.d;
                 const percentChange = data.dp;
                 const changeEl = document.getElementById('priceChange');
+
                 changeEl.innerText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${percentChange.toFixed(2)}%)`;
-                changeEl.className = change >= 0 ? "text-sm font-medium block mt-1 text-green-400" : "text-sm font-medium block mt-1 text-red-400";
-                flipAcoin(data);
+                changeEl.className = change >= 0 ? "text-sm font-medium block mt-1 text-green-600 dark:text-green-400" : "text-sm font-medium block mt-1 text-red-600 dark:text-red-400";
+
+                calculatePrediction(data);
                 document.getElementById('chartTitle').innerText = `${ticker} Compiled History`;
-                await chartdataorsum(ticker, branchData.history, data);
+
+                await chartdata(ticker, branchData.history, data);
 
             } catch (error) {
-                console.error("comms failure:", error);
-                somethingwentwrong("database is unreadable.");
+                console.error("Static core engine communication error:", error);
+                showErrorState("internal database file structure missing or unreadable.");
             }
         }
-        function somethingwentwrong(msg) {
+
+        function showErrorState(msg) {
             const errorMsg = document.getElementById('errorMessage');
             errorMsg.innerText = msg;
             errorMsg.classList.remove('hidden');
             document.getElementById('mainContent').classList.add('hidden');
             document.getElementById('lastUpdated').classList.add('hidden');
         }
-        async function chartdataorsum(ticker, historyArray, currentQuote) {
+
+        async function chartdata(ticker, historyArray, currentQuote) {
             const noteEl = document.getElementById('chartSourceNote');
+            
             if (chartCache[ticker]) {
                 const cached = chartCache[ticker];
                 noteEl.innerText = cached.source;
                 noteEl.className = cached.sourceClass;
-                chartify(ticker, cached.t, cached.c);
+                currentChartData = { timestamps: cached.t, prices: cached.c };
+                renderChart(ticker, cached.t, cached.c);
                 return;
             }
+            
             if (historyArray && historyArray.length > 1) {
                 const srcText = "backend core engine log";
-                const srcClass = "text-xs font-medium text-green-400 bg-green-950/50 px-2 py-1 rounded border border-green-800";
+                const srcClass = "text-xs font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-950/50 px-2 py-1 rounded border border-green-300 dark:border-green-800";
+                
                 const timestamps = historyArray.map(point => point.t);
                 const prices = historyArray.map(point => point.c);
+
                 chartCache[ticker] = { t: timestamps, c: prices, source: srcText, sourceClass: srcClass };
-                noteEl.innerText = srcText;
-                noteEl.className = srcClass;
-                chartify(ticker, timestamps, prices);
-            } else {
-                const srcText = "accumulating background records";
-                const srcClass = "text-xs font-medium text-amber-400 bg-amber-950/50 px-2 py-1 rounded border border-amber-800";
                 
                 noteEl.innerText = srcText;
                 noteEl.className = srcClass;
-                lieaboutdata(ticker, currentQuote, srcText, srcClass);
+                currentChartData = { timestamps, prices };
+                renderChart(ticker, timestamps, prices);
+            } else {
+                const srcText = "accumulating background records";
+                const srcClass = "text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/50 px-2 py-1 rounded border border-amber-300 dark:border-amber-800";
+                
+                noteEl.innerText = srcText;
+                noteEl.className = srcClass;
+                fakedata(ticker, currentQuote, srcText, srcClass);
             }
         }
-        function lieaboutdata(ticker, data, srcText, srcClass) {
+
+        function fakedata(ticker, data, srcText, srcClass) {
             const prices = [];
             const timestamps = [];
+            
             let basePrice = data.c - (data.d * 0.5); 
             const now = Math.floor(Date.now() / 1000);
             const intervalsAgo = 15; 
+
             for (let i = intervalsAgo; i >= 0; i--) {
-                timestamps.push(now - (i * 86400));
+                timestamps.push(now - (i * 3600)); // Simulated hourly
                 const variance = (Math.random() - 0.49) * (data.h - data.l || basePrice * 0.015);
                 basePrice += variance;
                 if (i === 0) basePrice = data.c; 
                 prices.push(Number(basePrice.toFixed(2)));
             }
+
             chartCache[ticker] = { t: timestamps, c: prices, source: srcText, sourceClass: srcClass };
-            chartify(ticker, timestamps, prices);
+            currentChartData = { timestamps, prices };
+            renderChart(ticker, timestamps, prices);
         }
-        function chartify(ticker, timestamps, prices) {
+
+        function renderChart(ticker, timestamps, prices) {
             const ctx = document.getElementById('stockChart').getContext('2d');
+            const isDarkMode = document.documentElement.classList.contains('dark');
+
+
+            const gridColor = isDarkMode ? '#1f2937' : '#e5e7eb';
+            const tickColor = isDarkMode ? '#9ca3af' : '#6b7280';
+
             if (stockChartInstance) {
                 stockChartInstance.destroy();
             }
+
             const labels = timestamps.map(ts => {
                 const date = new Date(ts * 1000);
                 return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:00`;
             });
+
             const isTrendUp = prices[prices.length - 1] >= prices[0];
-            const lineColor = isTrendUp ? '#4ade80' : '#f87171'; 
+            const lineColor = isTrendUp ? '#22c55e' : '#ef4444'; 
+            
             const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-            gradient.addColorStop(0, isTrendUp ? 'rgba(74, 222, 128, 0.15)' : 'rgba(248, 113, 113, 0.15)');
+            gradient.addColorStop(0, isTrendUp ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)');
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
             stockChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -239,18 +321,19 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         x: {
-                            grid: { color: '#1f2937' }, 
-                            ticks: { color: '#9ca3af', maxTicksLimit: 6 } 
+                            grid: { color: gridColor }, 
+                            ticks: { color: tickColor, maxTicksLimit: 6 } 
                         },
                         y: {
-                            grid: { color: '#1f2937' },
-                            ticks: { color: '#9ca3af' }
+                            grid: { color: gridColor },
+                            ticks: { color: tickColor }
                         }
                     }
                 }
             });
         }
-        function flipAcoin(data) {
+
+        function calculatePrediction(data) {
             const signalEl = document.getElementById('predictionSignal');
             const reasoningEl = document.getElementById('predictionReasoning');
             const currentPrice = data.c;
@@ -260,17 +343,17 @@
             const dailyRange = dailyHigh - dailyLow;
             const positionInRange = dailyRange > 0 ? (currentPrice - dailyLow) / dailyRange : 0.5;
             if (currentPrice > openPrice && positionInRange > 0.7) {
-                signalEl.innerText = "Price Gain";
-                signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-green-950 text-green-400 border border-green-500";
-                reasoningEl.innerText = "this stock is currently doing well rn and is going up";
+                signalEl.innerText = "momentum up";
+                signalEl.className = "text-xl font-black px-3 py-1 rounded inline-block bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-500";
+                reasoningEl.innerText = "trading near intraday highs relative to open";
             } else if (currentPrice < openPrice && positionInRange < 0.3) {
-                signalEl.innerText = "Price Loss";
-                signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-red-950 text-red-400 border border-red-500";
-                reasoningEl.innerText = "stock is cooked rn and is going DOWN";
+                signalEl.innerText = "momentum down";
+                signalEl.className = "text-xl font-black px-3 py-1 rounded inline-block bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500";
+                reasoningEl.innerText = "trading near intraday lows relative to open";
             } else {
-                signalEl.innerText = "No Change";
-                signalEl.className = "text-2xl font-black px-3 py-1 rounded inline-block bg-gray-700 text-gray-300 border border-gray-500";
-                reasoningEl.innerText = "all quiet on the happening front...";
+                signalEl.innerText = "neutral consolidation";
+                signalEl.className = "text-xl font-black px-3 py-1 rounded inline-block bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-400 dark:border-gray-500";
+                reasoningEl.innerText = "no strong directional momentum detected";
             }
         }
     </script>

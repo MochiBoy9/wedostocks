@@ -6,7 +6,6 @@
     <title>we do some stocks around here</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Configure Tailwind to listen for the manual HTML class toggle
         tailwind.config = {
             darkMode: 'class',
         }
@@ -14,7 +13,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
-
     <header class="bg-white dark:bg-gray-800 p-5 shadow-md border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <div class="container mx-auto flex justify-between items-center">
             <div>
@@ -28,7 +26,6 @@
             </button>
         </div>
     </header>
-
     <main class="container mx-auto p-6 flex-grow">
         <div class="max-w-6xl mx-auto mb-8">
             <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 text-center md:text-left">Select an Asset Terminal</h2>
@@ -37,17 +34,14 @@
             <p id="errorMessage" class="text-red-500 dark:text-red-400 text-sm mt-4 hidden text-center">internal connection error with the script engine.</p>
             <p id="lastUpdated" class="text-gray-500 text-xs mt-2 hidden text-center">last backend archive check: <span id="timeSpan"></span></p>
         </div>
-
         <div id="mainContent" class="hidden">
-            <div id="stockDashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-6">
-                
+            <div id="stockDashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-6">  
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 transition hover:border-gray-400 dark:hover:border-gray-500">
                     <h3 class="text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">Current Price</h3>
                     <p id="stockTicker" class="text-xs text-gray-400 dark:text-gray-500 mt-1"></p>
                     <p id="currentPrice" class="text-3xl font-bold mt-2 text-gray-900 dark:text-white">$0.00</p>
                     <span id="priceChange" class="text-sm font-medium block mt-1">0.00 (0.00%)</span>
                 </div>
-
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 transition hover:border-gray-400 dark:hover:border-gray-500">
                     <h3 class="text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">Range</h3>
                     <div class="mt-4 space-y-2">
@@ -61,7 +55,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 flex flex-col justify-between transition hover:border-gray-400 dark:hover:border-gray-500">
                     <div>
                         <h3 class="text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">current short term</h3>
@@ -75,7 +68,6 @@
                     <p id="predictionReasoning" class="text-xs text-gray-500 dark:text-gray-400">no data loaded yet</p>
                 </div>
             </div>
-
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 max-w-6xl mx-auto relative transition-colors duration-300">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-3">
@@ -89,41 +81,30 @@
             </div>
         </div>
     </main>
-
     <footer class="bg-white dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-700 text-center text-xs text-gray-500 transition-colors duration-300">
         data tracked via finnhub engine api, logged using github actions background hourly servers
     </footer>
-
     <script>
         let stockChartInstance = null; 
         let activeTicker = '';
         let chartCache = {}; 
         let currentChartData = { timestamps: [], prices: [] }; 
-        
-        // Fully expanded 16-stock matrix
         const PRESET_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'AMZN', 'GOOGL', 'META', 'NFLX', 'AMD', 'INTC', 'SPY', 'QQQ', 'DIS', 'BA', 'WMT', 'JPM'];
-
-
         const themeToggleBtn = document.getElementById('themeToggle');
         const htmlElement = document.documentElement;
-
         themeToggleBtn.addEventListener('click', () => {
             htmlElement.classList.toggle('dark');
-
             if (currentChartData.timestamps.length > 0) {
                 renderChart(activeTicker, currentChartData.timestamps, currentChartData.prices);
             }
         });
-
         window.addEventListener('DOMContentLoaded', () => {
             renderPresetCards();
             selectAsset(PRESET_TICKERS[0]);
         });
-
         function renderPresetCards() {
             const container = document.getElementById('assetCardsGrid');
-            container.innerHTML = '';
-            
+            container.innerHTML = '';    
             PRESET_TICKERS.forEach(ticker => {
                 const card = document.createElement('div');
                 card.id = `card-${ticker}`;
@@ -136,81 +117,61 @@
                 container.appendChild(card);
             });
         }
-
         async function selectAsset(ticker) {
-            if (activeTicker === ticker) return;
-            
+            if (activeTicker === ticker) return;   
             PRESET_TICKERS.forEach(t => {
                 const cardEl = document.getElementById(`card-${t}`);
                 if (cardEl) {
                     cardEl.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide transition-all hover:border-gray-400 dark:hover:border-gray-500 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white";
                 }
             });
-
             const activeCard = document.getElementById(`card-${ticker}`);
             if (activeCard) {
                 activeCard.className = "bg-green-50 dark:bg-green-950/40 border-green-500 p-3 rounded-lg shadow cursor-pointer text-center font-bold tracking-wide text-green-600 dark:text-green-400 ring-1 ring-green-300 dark:ring-green-900/50";
             }
-
             activeTicker = ticker;
             await getdata(ticker);
         }
-
         async function getdata(ticker) {
             const errorMsg = document.getElementById('errorMessage');
             const mainContent = document.getElementById('mainContent');
             const lastUpdated = document.getElementById('lastUpdated');
             const timeSpan = document.getElementById('timeSpan');
-
             try {
-        
-                const response = await fetch(`./stock-data.json?t=${new Date().getTime()}`);
-                
+                const response = await fetch(`./stock-data.json?t=${new Date().getTime()}`); 
                 if (!response.ok) {
                     showErrorState("stock-data.json file not verified or compiled yet. run action worker once.");
                     return;
                 }
-
                 const dataStore = await response.json();
-                const branchData = dataStore[ticker];
-
+                const branchData = dataStore[ticker]
                 if (!branchData || !branchData.current) {
                     showErrorState(`target branch element tracking index missing data for node: ${ticker}`);
                     return;
                 }
-
                 const data = branchData.current;
-
                 errorMsg.classList.add('hidden');
                 mainContent.classList.remove('hidden');
-                
                 const now = new Date();
                 timeSpan.innerText = now.toLocaleTimeString();
                 lastUpdated.classList.remove('hidden');
-
                 document.getElementById('stockTicker').innerText = ticker;
                 document.getElementById('currentPrice').innerText = `$${data.c.toFixed(2)}`;
                 document.getElementById('dailyHigh').innerText = `$${data.h.toFixed(2)}`;
                 document.getElementById('dailyLow').innerText = `$${data.l.toFixed(2)}`;
-
                 const change = data.d;
                 const percentChange = data.dp;
                 const changeEl = document.getElementById('priceChange');
-
                 changeEl.innerText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${percentChange.toFixed(2)}%)`;
                 changeEl.className = change >= 0 ? "text-sm font-medium block mt-1 text-green-600 dark:text-green-400" : "text-sm font-medium block mt-1 text-red-600 dark:text-red-400";
-
                 calculatePrediction(data);
                 document.getElementById('chartTitle').innerText = `${ticker} Compiled History`;
-
                 await chartdata(ticker, branchData.history, data);
-
             } catch (error) {
                 console.error("Static core engine communication error:", error);
                 showErrorState("internal database file structure missing or unreadable.");
             }
         }
-
         function showErrorState(msg) {
             const errorMsg = document.getElementById('errorMessage');
             errorMsg.innerText = msg;
@@ -218,10 +179,8 @@
             document.getElementById('mainContent').classList.add('hidden');
             document.getElementById('lastUpdated').classList.add('hidden');
         }
-
         async function chartdata(ticker, historyArray, currentQuote) {
-            const noteEl = document.getElementById('chartSourceNote');
-            
+            const noteEl = document.getElementById('chartSourceNote'); 
             if (chartCache[ticker]) {
                 const cached = chartCache[ticker];
                 noteEl.innerText = cached.source;
@@ -229,39 +188,31 @@
                 currentChartData = { timestamps: cached.t, prices: cached.c };
                 renderChart(ticker, cached.t, cached.c);
                 return;
-            }
-            
+            } 
             if (historyArray && historyArray.length > 1) {
                 const srcText = "current data";
-                const srcClass = "text-xs font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-950/50 px-2 py-1 rounded border border-green-300 dark:border-green-800";
-                
+                const srcClass = "text-xs font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-950/50 px-2 py-1 rounded border border-green-300 dark:border-green-800";          
                 const timestamps = historyArray.map(point => point.t);
                 const prices = historyArray.map(point => point.c);
-
-                chartCache[ticker] = { t: timestamps, c: prices, source: srcText, sourceClass: srcClass };
-                
+                chartCache[ticker] = { t: timestamps, c: prices, source: srcText, sourceClass: srcClass };                
                 noteEl.innerText = srcText;
                 noteEl.className = srcClass;
                 currentChartData = { timestamps, prices };
                 renderChart(ticker, timestamps, prices);
             } else {
                 const srcText = "finding background data";
-                const srcClass = "text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/50 px-2 py-1 rounded border border-amber-300 dark:border-amber-800";
-                
+                const srcClass = "text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/50 px-2 py-1 rounded border border-amber-300 dark:border-amber-800";      
                 noteEl.innerText = srcText;
                 noteEl.className = srcClass;
                 fakedata(ticker, currentQuote, srcText, srcClass);
             }
         }
-
         function fakedata(ticker, data, srcText, srcClass) {
             const prices = [];
-            const timestamps = [];
-            
+            const timestamps = [];   
             let basePrice = data.c - (data.d * 0.5); 
             const now = Math.floor(Date.now() / 1000);
             const intervalsAgo = 15; 
-
             for (let i = intervalsAgo; i >= 0; i--) {
                 timestamps.push(now - (i * 3600)); // Simulated hourly
                 const variance = (Math.random() - 0.49) * (data.h - data.l || basePrice * 0.015);
@@ -269,36 +220,27 @@
                 if (i === 0) basePrice = data.c; 
                 prices.push(Number(basePrice.toFixed(2)));
             }
-
             chartCache[ticker] = { t: timestamps, c: prices, source: srcText, sourceClass: srcClass };
             currentChartData = { timestamps, prices };
             renderChart(ticker, timestamps, prices);
         }
-
         function renderChart(ticker, timestamps, prices) {
             const ctx = document.getElementById('stockChart').getContext('2d');
             const isDarkMode = document.documentElement.classList.contains('dark');
-
-
             const gridColor = isDarkMode ? '#1f2937' : '#e5e7eb';
             const tickColor = isDarkMode ? '#9ca3af' : '#6b7280';
-
             if (stockChartInstance) {
                 stockChartInstance.destroy();
             }
-
             const labels = timestamps.map(ts => {
                 const date = new Date(ts * 1000);
                 return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:00`;
             });
-
             const isTrendUp = prices[prices.length - 1] >= prices[0];
             const lineColor = isTrendUp ? '#22c55e' : '#ef4444'; 
-            
             const gradient = ctx.createLinearGradient(0, 0, 0, 250);
             gradient.addColorStop(0, isTrendUp ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)');
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
             stockChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -332,7 +274,6 @@
                 }
             });
         }
-
         function calculatePrediction(data) {
             const signalEl = document.getElementById('predictionSignal');
             const reasoningEl = document.getElementById('predictionReasoning');

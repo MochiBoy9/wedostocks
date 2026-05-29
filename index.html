@@ -232,7 +232,7 @@
             }
             
             if (historyArray && historyArray.length > 1) {
-                const srcText = "backend core engine log";
+                const srcText = "current data";
                 const srcClass = "text-xs font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-950/50 px-2 py-1 rounded border border-green-300 dark:border-green-800";
                 
                 const timestamps = historyArray.map(point => point.t);
@@ -245,7 +245,7 @@
                 currentChartData = { timestamps, prices };
                 renderChart(ticker, timestamps, prices);
             } else {
-                const srcText = "accumulating background records";
+                const srcText = "finding background data";
                 const srcClass = "text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/50 px-2 py-1 rounded border border-amber-300 dark:border-amber-800";
                 
                 noteEl.innerText = srcText;
@@ -345,15 +345,15 @@
             if (currentPrice > openPrice && positionInRange > 0.7) {
                 signalEl.innerText = "momentum up";
                 signalEl.className = "text-xl font-black px-3 py-1 rounded inline-block bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-500";
-                reasoningEl.innerText = "trading near intraday highs relative to open";
+                reasoningEl.innerText = "stock appears to be good rn";
             } else if (currentPrice < openPrice && positionInRange < 0.3) {
                 signalEl.innerText = "momentum down";
                 signalEl.className = "text-xl font-black px-3 py-1 rounded inline-block bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500";
-                reasoningEl.innerText = "trading near intraday lows relative to open";
+                reasoningEl.innerText = "stock ain't doing so good";
             } else {
-                signalEl.innerText = "neutral consolidation";
+                signalEl.innerText = "neutral momentum";
                 signalEl.className = "text-xl font-black px-3 py-1 rounded inline-block bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-400 dark:border-gray-500";
-                reasoningEl.innerText = "no strong directional momentum detected";
+                reasoningEl.innerText = "stock is relatively normal";
             }
         }
     </script>
